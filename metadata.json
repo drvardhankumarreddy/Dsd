@@ -1,0 +1,5 @@
+{
+  "name": "DSD Specialist AI",
+  "description": "DM-Level Discharge Summary generator exclusively for Disorders of Sex Development (DSD) with Chicago Consensus classification support.",
+  "requestFramePermissions": []
+}

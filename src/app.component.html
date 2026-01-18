@@ -1,0 +1,696 @@
+
+<div class="flex h-screen overflow-hidden bg-[#F8FAFC] text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
+  
+  <!-- Sidebar Navigation (Slim) -->
+  <aside class="w-20 bg-white border-r border-slate-200 flex flex-col items-center py-8 no-print z-30 flex-shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+    <div class="mb-10">
+      <div class="w-12 h-12 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-blue-500/30">DS</div>
+    </div>
+    
+    <nav class="flex flex-col gap-6 w-full px-3">
+      <button 
+        (click)="currentView.set('form')"
+        [class.bg-blue-50]="currentView() === 'form'"
+        [class.text-blue-600]="currentView() === 'form'"
+        [class.text-slate-400]="currentView() !== 'form'"
+        class="p-3.5 rounded-2xl transition-all duration-300 group relative flex justify-center hover:bg-slate-50">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+        <div class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-xl">Editor</div>
+      </button>
+
+      <button 
+        (click)="currentView() === 'preview' ? null : generateSummary()"
+        [disabled]="currentView() === 'generating'"
+        [class.bg-blue-50]="currentView() === 'preview'"
+        [class.text-blue-600]="currentView() === 'preview'"
+        [class.text-slate-400]="currentView() !== 'preview'"
+        class="p-3.5 rounded-2xl transition-all duration-300 group relative flex justify-center hover:bg-slate-50 disabled:opacity-50">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        <div class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-xl">Preview</div>
+      </button>
+
+      <div class="h-px w-10 bg-slate-100 mx-auto"></div>
+
+      <button 
+        (click)="toggleSearch()"
+        [class.bg-blue-50]="showSearchPanel()"
+        [class.text-blue-600]="showSearchPanel()"
+        [class.text-slate-400]="!showSearchPanel()"
+        class="p-3.5 rounded-2xl transition-all duration-300 group relative flex justify-center hover:bg-slate-50">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <div class="absolute left-full ml-4 px-3 py-1.5 bg-slate-800 text-white text-xs font-bold rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50 shadow-xl">AI Assistant</div>
+      </button>
+    </nav>
+  </aside>
+
+  <!-- Main Content Area -->
+  <main class="flex-1 relative overflow-hidden flex flex-col w-full">
+    
+    <!-- Mobile Header -->
+    <header class="md:hidden bg-white/80 backdrop-blur-md border-b border-slate-200 p-4 flex justify-between items-center z-10 sticky top-0">
+      <h1 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+        <span class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white text-sm">DS</span>
+        DSD Specialist
+      </h1>
+      <button (click)="toggleSearch()" class="p-2 text-slate-500 hover:bg-slate-100 rounded-full">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+      </button>
+    </header>
+
+    <!-- VIEW: FORM -->
+    @if (currentView() === 'form') {
+      <div class="flex-1 overflow-y-auto p-4 md:p-8 scroll-smooth">
+        <div class="max-w-[1600px] mx-auto pb-40">
+          
+          <header class="mb-10 pl-2">
+            <h1 class="text-4xl font-extrabold text-slate-900 tracking-tight">Disorders of Sex Development</h1>
+            <p class="text-slate-500 mt-2 text-lg font-bold uppercase tracking-widest">Endocrinology Department Entry</p>
+          </header>
+
+          <form [formGroup]="patientForm" class="space-y-10">
+            
+            <!-- 1. PATIENT DETAILS -->
+            <section class="card-bubble" formGroupName="demographics">
+              <div class="section-header">
+                <div class="w-12 h-12 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-lg shadow-sm">1</div>
+                <div>
+                  <h2 class="font-bold text-slate-900 text-xl">Patient Demographics</h2>
+                  <p class="text-slate-400 text-sm font-medium">Basic identification and social details</p>
+                </div>
+              </div>
+              
+              <div class="p-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-x-8 gap-y-8">
+                <div class="col-span-1 md:col-span-2 space-y-2">
+                  <label class="label-bubble">Patient Name</label>
+                  <input type="text" formControlName="name" class="input-bubble" placeholder="Enter Full Name">
+                </div>
+                <div class="space-y-2">
+                  <label class="label-bubble">Hospital ID (UHID)</label>
+                  <input type="text" formControlName="uhid" class="input-bubble" placeholder="ID Number">
+                </div>
+                <div class="space-y-2">
+                  <label class="label-bubble">Date of Birth</label>
+                  <input type="date" formControlName="dob" class="input-bubble">
+                </div>
+
+                <div class="space-y-2">
+                  <label class="label-bubble">Age</label>
+                  <input type="text" formControlName="age" class="input-bubble" placeholder="e.g. 14y">
+                </div>
+                <div class="space-y-2">
+                  <label class="label-bubble">Ethnic Origin</label>
+                  <input type="text" formControlName="ethnicOrigin" class="input-bubble" placeholder="Origin">
+                </div>
+                <div class="space-y-2">
+                  <label class="label-bubble">Sex (Assigned)</label>
+                  <div class="relative">
+                    <select formControlName="sexAssigned" class="input-bubble appearance-none">
+                      @for (g of sexAssignedOptions; track g) { <option [value]="g">{{ g }}</option> }
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+                  </div>
+                </div>
+                <div class="space-y-2">
+                  <label class="label-bubble">Gender of Rearing</label>
+                  <div class="relative">
+                    <select formControlName="currentGender" class="input-bubble appearance-none">
+                      @for (g of genderOptions; track g) { <option [value]="g">{{ g }}</option> }
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+                  </div>
+                </div>
+
+                <div class="col-span-1 md:col-span-2 space-y-2">
+                  <label class="label-bubble">Address</label>
+                  <input type="text" formControlName="address" class="input-bubble" placeholder="Full residential address">
+                </div>
+                <div class="space-y-2">
+                  <label class="label-bubble">Phone</label>
+                  <input type="text" formControlName="phone1" class="input-bubble" placeholder="Contact Number">
+                </div>
+                <div class="space-y-2">
+                  <label class="label-bubble">Email</label>
+                  <input type="email" formControlName="email" class="input-bubble" placeholder="Email Address">
+                </div>
+                
+                <div class="col-span-1 md:col-span-2 space-y-2">
+                  <label class="label-bubble">Education</label>
+                  <input type="text" formControlName="education" class="input-bubble" placeholder="Highest Qualification">
+                </div>
+                <div class="col-span-1 md:col-span-2 space-y-2">
+                  <label class="label-bubble">Occupation</label>
+                  <input type="text" formControlName="occupation" class="input-bubble" placeholder="Current Occupation">
+                </div>
+              </div>
+            </section>
+
+            <!-- 2. CLINICAL HISTORY -->
+            <section class="card-bubble" formGroupName="clinicalHistory">
+              <div class="section-header">
+                <div class="w-12 h-12 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-lg shadow-sm">2</div>
+                <div>
+                  <h2 class="font-bold text-slate-900 text-xl">Clinical History</h2>
+                  <p class="text-slate-400 text-sm font-medium">Presenting complaints and history</p>
+                </div>
+              </div>
+              <div class="p-8 space-y-10">
+                <!-- Diagnosis Info -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div class="space-y-2">
+                    <label class="label-bubble">Initial Diagnosis (Provisional)</label>
+                    <input type="text" formControlName="initialDiagnosis" class="input-bubble" placeholder="Provisional clinical diagnosis">
+                  </div>
+                  <div class="space-y-2">
+                    <label class="label-bubble">Age & Year of Diagnosis</label>
+                    <input type="text" formControlName="ageDiagnosis" class="input-bubble" placeholder="When was it first diagnosed?">
+                  </div>
+                </div>
+
+                <!-- Symptoms -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <div class="space-y-2">
+                    <label class="label-bubble">Symptoms at Onset</label>
+                    <textarea formControlName="symptomsOnset" class="input-bubble h-32" placeholder="Describe symptoms..."></textarea>
+                  </div>
+                  <div class="space-y-2">
+                    <label class="label-bubble">Current Symptoms</label>
+                    <textarea formControlName="symptomsCurrent" class="input-bubble h-32" placeholder="Describe status..."></textarea>
+                  </div>
+                </div>
+
+                <!-- Specific Flags - Bubble Pills -->
+                <div class="bg-slate-50/50 p-8 rounded-[2rem] border-2 border-slate-100">
+                  <h3 class="text-xs font-extrabold text-slate-400 uppercase mb-6 tracking-widest pl-2">Clinical Flags</h3>
+                  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                    <div class="bg-white p-4 rounded-2xl border-2 border-slate-100 shadow-sm flex flex-col justify-center items-center gap-3 hover:border-purple-200 transition-colors">
+                      <label class="text-xs font-bold text-slate-500 uppercase">Salt Wasting</label>
+                      <select formControlName="saltWasting" class="w-full rounded-xl border-slate-200 text-sm py-2 text-center font-bold text-purple-700 bg-purple-50/50 focus:ring-0 cursor-pointer"><option>Yes</option><option>No</option></select>
+                    </div>
+                    <div class="bg-white p-4 rounded-2xl border-2 border-slate-100 shadow-sm flex flex-col justify-center items-center gap-3 hover:border-purple-200 transition-colors">
+                      <label class="text-xs font-bold text-slate-500 uppercase">Hypertension</label>
+                      <select formControlName="hypertension" class="w-full rounded-xl border-slate-200 text-sm py-2 text-center font-bold text-purple-700 bg-purple-50/50 focus:ring-0 cursor-pointer"><option>Yes</option><option>No</option></select>
+                    </div>
+                     <div class="bg-white p-4 rounded-2xl border-2 border-slate-100 shadow-sm flex flex-col justify-center items-center gap-3 hover:border-purple-200 transition-colors">
+                      <label class="text-xs font-bold text-slate-500 uppercase">Hirsutism</label>
+                      <select formControlName="hirsutism" class="w-full rounded-xl border-slate-200 text-sm py-2 text-center font-bold text-purple-700 bg-purple-50/50 focus:ring-0 cursor-pointer"><option>Yes</option><option>No</option></select>
+                    </div>
+                     <div class="bg-white p-4 rounded-2xl border-2 border-slate-100 shadow-sm flex flex-col justify-center items-center gap-3 hover:border-purple-200 transition-colors">
+                      <label class="text-xs font-bold text-slate-500 uppercase">Virilisation</label>
+                      <select formControlName="virilisation" class="w-full rounded-xl border-slate-200 text-sm py-2 text-center font-bold text-purple-700 bg-purple-50/50 focus:ring-0 cursor-pointer"><option>Yes</option><option>No</option></select>
+                    </div>
+                     <div class="bg-white p-4 rounded-2xl border-2 border-slate-100 shadow-sm flex flex-col justify-center items-center gap-3 hover:border-purple-200 transition-colors">
+                      <label class="text-xs font-bold text-slate-500 uppercase">Age Onset</label>
+                      <input type="text" formControlName="onsetAge" class="w-full rounded-xl border-slate-200 text-sm py-2 text-center font-bold bg-slate-50">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Puberty & Repro -->
+                <div>
+                   <h3 class="text-lg font-bold text-slate-900 border-b-2 border-slate-100 pb-4 mb-6">Puberty & Reproductive History</h3>
+                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                     <div class="space-y-2">
+                      <label class="label-bubble">Age at Menarche</label>
+                      <input type="text" formControlName="menarcheAge" class="input-bubble">
+                    </div>
+                    <div class="space-y-2">
+                      <label class="label-bubble">Menstrual Cycles</label>
+                      <input type="text" formControlName="menstrualCycles" class="input-bubble">
+                    </div>
+                     <div class="space-y-2">
+                      <label class="label-bubble">Precocious Puberty?</label>
+                       <div class="relative"><select formControlName="precociousPuberty" class="input-bubble appearance-none"><option>Yes</option><option>No</option></select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                    </div>
+                     <div class="space-y-2">
+                      <label class="label-bubble">Marital Status</label>
+                      <div class="relative"><select formControlName="maritalStatus" class="input-bubble appearance-none"><option>Single</option><option>Married</option><option>Divorced</option></select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                    </div>
+                    <div class="space-y-2">
+                      <label class="label-bubble">Parity</label>
+                      <input type="text" formControlName="parity" class="input-bubble">
+                    </div>
+                    <div class="space-y-2">
+                      <label class="label-bubble">Infertility History</label>
+                      <input type="text" formControlName="infertility" class="input-bubble">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Surgery -->
+                 <div>
+                   <h3 class="text-lg font-bold text-slate-900 border-b-2 border-slate-100 pb-4 mb-6">Surgical History</h3>
+                   <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                     <div class="space-y-2">
+                      <label class="label-bubble">History of Genital Surgery?</label>
+                       <div class="relative"><select formControlName="surgeryHistory" class="input-bubble appearance-none"><option>Yes</option><option>No</option></select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                    </div>
+                    <div class="space-y-2">
+                      <label class="label-bubble">Type of Surgery</label>
+                      <input type="text" formControlName="surgeryType" class="input-bubble">
+                    </div>
+                    <div class="space-y-2">
+                      <label class="label-bubble">Age at Surgery</label>
+                      <input type="text" formControlName="surgeryAge" class="input-bubble">
+                    </div>
+                  </div>
+                </div>
+                 
+                 <!-- Comorbidities -->
+                <div>
+                   <label class="label-bubble">Comorbidities</label>
+                   <textarea formControlName="comorbidities" class="input-bubble h-24"></textarea>
+                </div>
+              </div>
+            </section>
+
+             <!-- 3. EXAMINATION -->
+            <section class="card-bubble" formGroupName="examination">
+              <div class="section-header">
+                <div class="w-12 h-12 rounded-2xl bg-rose-100 text-rose-600 flex items-center justify-center font-bold text-lg shadow-sm">3</div>
+                <div>
+                  <h2 class="font-bold text-slate-900 text-xl">General Examination</h2>
+                  <p class="text-slate-400 text-sm font-medium">Physical signs and phenotype scoring</p>
+                </div>
+              </div>
+              <div class="p-8 space-y-10">
+                <!-- Anthropometry -->
+                <div>
+                   <h3 class="text-lg font-bold text-slate-900 border-b-2 border-slate-100 pb-4 mb-6">Anthropometry & Vitals</h3>
+                   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+                    <div class="space-y-2">
+                      <label class="label-bubble">Height (cm)</label>
+                      <input type="number" formControlName="height" (input)="calculateBMI()" class="input-bubble">
+                    </div>
+                    <div class="space-y-2">
+                      <label class="label-bubble">Weight (kg)</label>
+                      <input type="number" formControlName="weight" (input)="calculateBMI()" class="input-bubble">
+                    </div>
+                    <div class="space-y-2">
+                      <label class="label-bubble">BMI</label>
+                      <input type="text" formControlName="bmi" class="input-bubble bg-slate-100 font-bold text-slate-500 cursor-not-allowed border-transparent" readonly tabindex="-1">
+                    </div>
+                     <div class="space-y-2">
+                      <label class="label-bubble">Target Height</label>
+                      <input type="text" formControlName="targetHeight" class="input-bubble">
+                    </div>
+                     <div class="space-y-2">
+                      <label class="label-bubble">BP (mmHg)</label>
+                      <input type="text" formControlName="bp" class="input-bubble">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- General Signs -->
+                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-8">
+                   <div class="space-y-2">
+                    <label class="label-bubble">Tanner Stage (Breast/Genitals)</label>
+                    <input type="text" formControlName="tannerBreastsGenitals" class="input-bubble">
+                  </div>
+                  <div class="space-y-2">
+                    <label class="label-bubble">Tanner Stage (Pubic Hair)</label>
+                    <input type="text" formControlName="tannerPubicHair" class="input-bubble">
+                  </div>
+                  <div class="space-y-2">
+                    <label class="label-bubble">Modified FG Score (Hirsutism)</label>
+                    <input type="number" formControlName="fgScore" class="input-bubble">
+                  </div>
+                </div>
+
+                <!-- EMS / EGS Calculators -->
+                 <div class="bg-slate-50/80 p-8 rounded-[2rem] border border-slate-200">
+                  <h3 class="font-extrabold text-slate-700 text-xl mb-8 flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-500"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+                    Genital Examination & Scoring
+                  </h3>
+                  
+                  <div class="grid grid-cols-1 sm:grid-cols-2 gap-8 mb-10">
+                     <div class="space-y-2">
+                        <label class="label-bubble">Prader Stage</label>
+                        <div class="relative"><select formControlName="praderStage" class="input-bubble appearance-none">
+                           @for (stage of praderStages; track stage) { <option [value]="stage">{{ stage }}</option> }
+                        </select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                     </div>
+                     <div class="space-y-2">
+                        <label class="label-bubble">Genital Hyperpigmentation</label>
+                        <div class="relative"><select formControlName="pigmentation" class="input-bubble appearance-none">
+                           <option>Absent</option><option>Present</option>
+                        </select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                     </div>
+                  </div>
+
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-10">
+                    <!-- EMS Widget -->
+                    <div class="bg-white rounded-[1.5rem] p-6 border-2 border-blue-100 shadow-sm relative overflow-hidden">
+                      <div class="flex justify-between items-center mb-6">
+                        <span class="font-bold text-blue-900 text-lg">EMS Calculator</span>
+                        <span class="bg-blue-600 text-white px-4 py-1.5 rounded-full text-base font-bold shadow-blue-200 shadow-md">{{ currentEmsScore() }} / 12</span>
+                      </div>
+                      <div class="space-y-4">
+                         <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wide ml-2">Fusion</label>
+                            <div class="relative"><select formControlName="emsFusion" class="input-bubble appearance-none border-blue-100 bg-blue-50/30">@for(o of emsOptions.fusion; track o.value){<option [ngValue]="o.value">{{o.label}}</option>}</select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                         </div>
+                         <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wide ml-2">Micropenis</label>
+                            <div class="relative"><select formControlName="emsMicropenis" class="input-bubble appearance-none border-blue-100 bg-blue-50/30">@for(o of emsOptions.micropenis; track o.value){<option [ngValue]="o.value">{{o.label}}</option>}</select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                         </div>
+                         <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wide ml-2">Meatus</label>
+                            <div class="relative"><select formControlName="emsMeatus" class="input-bubble appearance-none border-blue-100 bg-blue-50/30">@for(o of emsOptions.meatus; track o.value){<option [ngValue]="o.value">{{o.label}}</option>}</select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                         </div>
+                         <div class="grid grid-cols-2 gap-4">
+                           <div class="space-y-1">
+                              <label class="text-xs font-bold text-slate-400 uppercase tracking-wide ml-2">Right Gonad</label>
+                              <div class="relative"><select formControlName="emsGonadRight" class="input-bubble appearance-none border-blue-100 bg-blue-50/30">@for(o of emsOptions.gonad; track o.value){<option [ngValue]="o.value">{{o.label}}</option>}</select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                           </div>
+                           <div class="space-y-1">
+                              <label class="text-xs font-bold text-slate-400 uppercase tracking-wide ml-2">Left Gonad</label>
+                              <div class="relative"><select formControlName="emsGonadLeft" class="input-bubble appearance-none border-blue-100 bg-blue-50/30">@for(o of emsOptions.gonad; track o.value){<option [ngValue]="o.value">{{o.label}}</option>}</select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                           </div>
+                         </div>
+                      </div>
+                    </div>
+
+                    <!-- EGS Widget -->
+                    <div class="bg-white rounded-[1.5rem] p-6 border-2 border-indigo-100 shadow-sm relative overflow-hidden">
+                      <div class="flex justify-between items-center mb-6">
+                        <span class="font-bold text-indigo-900 text-lg">EGS Calculator</span>
+                        <span class="bg-indigo-600 text-white px-4 py-1.5 rounded-full text-base font-bold shadow-indigo-200 shadow-md">{{ currentEgsScore() }} / 12</span>
+                      </div>
+                       <div class="space-y-4">
+                         <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wide ml-2">Fusion</label>
+                            <div class="relative"><select formControlName="egsFusion" class="input-bubble appearance-none border-indigo-100 bg-indigo-50/30">@for(o of egsOptions.fusion; track o.value){<option [ngValue]="o.value">{{o.label}}</option>}</select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                         </div>
+                         <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wide ml-2">GT Length</label>
+                            <div class="relative"><select formControlName="egsGtLength" class="input-bubble appearance-none border-indigo-100 bg-indigo-50/30">@for(o of egsOptions.gtLength; track o.value){<option [ngValue]="o.value">{{o.label}}</option>}</select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                         </div>
+                         <div class="space-y-1">
+                            <label class="text-xs font-bold text-slate-400 uppercase tracking-wide ml-2">Meatus</label>
+                            <div class="relative"><select formControlName="egsMeatus" class="input-bubble appearance-none border-indigo-100 bg-indigo-50/30">@for(o of egsOptions.meatus; track o.value){<option [ngValue]="o.value">{{o.label}}</option>}</select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                         </div>
+                         <div class="grid grid-cols-2 gap-4">
+                           <div class="space-y-1">
+                              <label class="text-xs font-bold text-slate-400 uppercase tracking-wide ml-2">Right Gonad</label>
+                              <div class="relative"><select formControlName="egsGonadRight" class="input-bubble appearance-none border-indigo-100 bg-indigo-50/30">@for(o of egsOptions.gonad; track o.value){<option [ngValue]="o.value">{{o.label}}</option>}</select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                           </div>
+                           <div class="space-y-1">
+                              <label class="text-xs font-bold text-slate-400 uppercase tracking-wide ml-2">Left Gonad</label>
+                              <div class="relative"><select formControlName="egsGonadLeft" class="input-bubble appearance-none border-indigo-100 bg-indigo-50/30">@for(o of egsOptions.gonad; track o.value){<option [ngValue]="o.value">{{o.label}}</option>}</select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div>
+                           </div>
+                         </div>
+                      </div>
+                    </div>
+                  </div>
+                 </div>
+                 
+                 <div>
+                   <label class="label-bubble">Other Significant Findings</label>
+                   <textarea formControlName="otherFindings" class="input-bubble h-24"></textarea>
+                 </div>
+              </div>
+            </section>
+
+             <!-- 4. LAB FINDINGS -->
+             <section class="card-bubble" formGroupName="investigations">
+              <div class="section-header">
+                <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center font-bold text-lg shadow-sm">4</div>
+                <div>
+                  <h2 class="font-bold text-slate-900 text-xl">Lab Findings & Biochemistry</h2>
+                  <p class="text-slate-400 text-sm font-medium">Investigative profile</p>
+                </div>
+              </div>
+              <div class="p-8 space-y-10">
+                <!-- Routine -->
+                 <div>
+                   <h3 class="text-lg font-bold text-slate-900 border-b-2 border-slate-100 pb-4 mb-6">Routine Investigations</h3>
+                   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-6">
+                     <div class="space-y-2"><label class="label-bubble">Sodium</label><input type="text" formControlName="sodium" class="input-bubble"></div>
+                     <div class="space-y-2"><label class="label-bubble">Potassium</label><input type="text" formControlName="potassium" class="input-bubble"></div>
+                     <div class="space-y-2"><label class="label-bubble">Bicarbonate</label><input type="text" formControlName="bicarbonate" class="input-bubble"></div>
+                     <div class="space-y-2"><label class="label-bubble">Urea</label><input type="text" formControlName="urea" class="input-bubble"></div>
+                     <div class="space-y-2"><label class="label-bubble">Creatinine</label><input type="text" formControlName="creatinine" class="input-bubble"></div>
+                     <div class="space-y-2"><label class="label-bubble">Calcium</label><input type="text" formControlName="calcium" class="input-bubble"></div>
+                   </div>
+                   <div class="mt-6 space-y-2"><label class="label-bubble">LFT Summary / Others</label><input type="text" formControlName="lftSummary" class="input-bubble"></div>
+                 </div>
+
+                 <!-- Hormonal Panel -->
+                 <div>
+                   <h3 class="text-lg font-bold text-slate-900 border-b-2 border-slate-100 pb-4 mb-6">Hormonal Profile <span class="font-normal text-slate-400 text-sm ml-2">(Enter value + unit)</span></h3>
+                   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-8 gap-y-6">
+                     <div class="space-y-2"><label class="label-bubble">17 OH Progesterone</label><input type="text" formControlName="val17ohp" class="input-bubble" placeholder="ng/dL"></div>
+                     <div class="space-y-2"><label class="label-bubble">Testosterone</label><input type="text" formControlName="valTestosterone" class="input-bubble" placeholder="ng/dL"></div>
+                     <div class="space-y-2"><label class="label-bubble">8 AM Cortisol</label><input type="text" formControlName="valCortisol8am" class="input-bubble" placeholder="µg/dL"></div>
+                     <div class="space-y-2"><label class="label-bubble">11-Deoxycortisol</label><input type="text" formControlName="val11Deoxycortisol" class="input-bubble"></div>
+                     
+                     <div class="space-y-2"><label class="label-bubble">DHEAS</label><input type="text" formControlName="valDheas" class="input-bubble"></div>
+                     <div class="space-y-2"><label class="label-bubble">Aldosterone</label><input type="text" formControlName="valAldosterone" class="input-bubble"></div>
+                     <div class="space-y-2"><label class="label-bubble">Plasma Renin (PRA)</label><input type="text" formControlName="valRenin" class="input-bubble"></div>
+                     <div class="space-y-2"><label class="label-bubble">Progesterone</label><input type="text" formControlName="valProgesterone" class="input-bubble"></div>
+                     
+                     <div class="space-y-2"><label class="label-bubble">ACTH</label><input type="text" formControlName="valActh" class="input-bubble"></div>
+                     <div class="space-y-2"><label class="label-bubble">Deoxycorticosterone</label><input type="text" formControlName="valDoc" class="input-bubble"></div>
+                     <div class="space-y-2"><label class="label-bubble">17 OH Pregnenolone</label><input type="text" formControlName="val17OhPregnenolone" class="input-bubble"></div>
+                     <div class="space-y-2"><label class="label-bubble">Androstenedione</label><input type="text" formControlName="valAndrostenedione" class="input-bubble"></div>
+                   </div>
+                 </div>
+                 
+                 <!-- Urine -->
+                  <div>
+                   <h3 class="text-lg font-bold text-slate-900 border-b-2 border-slate-100 pb-4 mb-6">Urine Biochemistry</h3>
+                   <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                     <div class="space-y-2"><label class="label-bubble">17 Urinary Ketosteroids</label><input type="text" formControlName="valUrineKetosteroids" class="input-bubble"></div>
+                     <div class="space-y-2"><label class="label-bubble">Urinary Pregnanetriol</label><input type="text" formControlName="valUrinePregnanetriol" class="input-bubble"></div>
+                   </div>
+                 </div>
+
+                 <!-- Imaging & Genetics -->
+                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   <div class="space-y-2"><label class="label-bubble">Imaging Tests (USG/MRI)</label><textarea formControlName="imagingText" class="input-bubble h-32"></textarea></div>
+                   <div class="space-y-6">
+                      <div class="space-y-2"><label class="label-bubble">Karyotype</label><div class="relative"><select formControlName="karyotype" class="input-bubble appearance-none">@for(k of karyotypes; track k){<option [value]="k">{{k}}</option>}</select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div></div>
+                      <div class="space-y-2"><label class="label-bubble">Gene Mutation</label><div class="relative"><select formControlName="geneMutation" class="input-bubble appearance-none">@for(g of genes; track g){<option [value]="g">{{g}}</option>}</select><div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-slate-500"><svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div></div></div>
+                   </div>
+                 </div>
+              </div>
+             </section>
+
+             <!-- 5. CRITERIA CHECKLIST & TREATMENT -->
+             <section class="card-bubble">
+               <div class="section-header">
+                <div class="w-12 h-12 rounded-2xl bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-lg shadow-sm">5</div>
+                <div>
+                  <h2 class="font-bold text-slate-900 text-xl">CAH Criteria & Treatment</h2>
+                  <p class="text-slate-400 text-sm font-medium">Chicago consensus check</p>
+                </div>
+              </div>
+              <div class="p-8 grid grid-cols-1 lg:grid-cols-2 gap-12">
+                <!-- Checklist -->
+                <div formGroupName="cahCriteria" class="space-y-8">
+                  <div class="bg-teal-50/50 p-8 rounded-[2rem] border-2 border-teal-100">
+                    <h3 class="text-sm font-extrabold text-teal-800 mb-6 uppercase tracking-widest flex items-center gap-2">
+                       <div class="w-2 h-2 rounded-full bg-teal-500"></div>
+                       CAH Testing Checklist
+                    </h3>
+                    <div class="space-y-3">
+                      <!-- Bubble Checklist Items -->
+                      <div class="flex items-center justify-between p-4 bg-white border border-teal-100 rounded-2xl shadow-sm">
+                        <span class="text-sm font-bold text-slate-700 pr-4">1. History of consanguinity</span>
+                        <div class="relative"><select formControlName="consanguinity" class="w-24 rounded-xl border-slate-200 text-sm py-2 px-2 text-center bg-slate-50 font-bold focus:ring-0 appearance-none cursor-pointer"><option>Yes</option><option>No</option></select></div>
+                      </div>
+                      <div class="flex items-center justify-between p-4 bg-white border border-teal-100 rounded-2xl shadow-sm">
+                        <span class="text-sm font-bold text-slate-700 pr-4 leading-snug">2. Salt wasting / Ambiguous Genitalia / Precocious Puberty</span>
+                        <div class="relative"><select formControlName="saltWastingSx" class="w-24 rounded-xl border-slate-200 text-sm py-2 px-2 text-center bg-slate-50 font-bold focus:ring-0 appearance-none cursor-pointer"><option>Yes</option><option>No</option></select></div>
+                      </div>
+                       <div class="flex items-center justify-between p-4 bg-white border border-teal-100 rounded-2xl shadow-sm">
+                        <span class="text-sm font-bold text-slate-700 pr-4">3. Decreased Cortisol / Aldosterone</span>
+                        <div class="relative"><select formControlName="decreasedCortisol" class="w-24 rounded-xl border-slate-200 text-sm py-2 px-2 text-center bg-slate-50 font-bold focus:ring-0 appearance-none cursor-pointer"><option>Yes</option><option>No</option></select></div>
+                      </div>
+                      <div class="flex items-center justify-between p-4 bg-white border border-teal-100 rounded-2xl shadow-sm">
+                        <span class="text-sm font-bold text-slate-700 pr-4 leading-snug">4. Increased 17OHP / 11DOC / DHEAS / Testosterone</span>
+                        <div class="relative"><select formControlName="increasedAndrogens" class="w-24 rounded-xl border-slate-200 text-sm py-2 px-2 text-center bg-slate-50 font-bold focus:ring-0 appearance-none cursor-pointer"><option>Yes</option><option>No</option></select></div>
+                      </div>
+                       <div class="flex items-center justify-between p-4 bg-white border border-teal-100 rounded-2xl shadow-sm">
+                        <span class="text-sm font-bold text-slate-700 pr-4">5. No other causes (e.g., drug use)</span>
+                        <div class="relative"><select formControlName="noDrugHistory" class="w-24 rounded-xl border-slate-200 text-sm py-2 px-2 text-center bg-slate-50 font-bold focus:ring-0 appearance-none cursor-pointer"><option>Yes</option><option>No</option></select></div>
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <label class="label-bubble">Criteria Justification / Comments</label>
+                    <textarea formControlName="justification" class="input-bubble h-32"></textarea>
+                  </div>
+                </div>
+
+                <!-- Treatment -->
+                <div formGroupName="treatment" class="space-y-6">
+                  <h3 class="text-lg font-bold text-slate-900 border-b-2 border-slate-100 pb-4">Treatment Plan</h3>
+                  <div class="space-y-2">
+                    <label class="label-bubble">Treatment History</label>
+                    <textarea formControlName="history" class="input-bubble h-48"></textarea>
+                  </div>
+                   <div class="space-y-2">
+                    <label class="label-bubble">Current Treatment</label>
+                    <textarea formControlName="current" class="input-bubble h-48"></textarea>
+                  </div>
+                </div>
+              </div>
+             </section>
+
+             <!-- 6. FINAL SUMMARY -->
+             <section class="card-bubble bg-gradient-to-br from-white to-slate-50" formGroupName="summary">
+               <div class="section-header">
+                <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold text-lg shadow-sm">6</div>
+                <div>
+                  <h2 class="font-bold text-slate-900 text-xl">Final Classification</h2>
+                  <p class="text-slate-400 text-sm font-medium">Diagnosis & Plan</p>
+                </div>
+              </div>
+              <div class="p-8">
+                <div class="space-y-3">
+                  <label class="block text-sm font-extrabold text-slate-700 uppercase tracking-widest ml-2 mb-2">Final Classification / Diagnosis <span class="text-rose-500">*</span></label>
+                  <div class="relative">
+                    <select formControlName="finalDiagnosis" class="w-full rounded-[1.5rem] border-2 border-emerald-100 bg-white text-lg py-4 px-6 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/20 shadow-xl shadow-emerald-500/5 transition-all font-bold text-slate-800 appearance-none cursor-pointer hover:border-emerald-300">
+                      <option value="" disabled selected>Select Comprehensive Diagnosis...</option>
+                      <optgroup label="Sex Chromosome DSD">@for (d of diagnoses.sexChromosome; track d) { <option [value]="d">{{d}}</option> }</optgroup>
+                      <optgroup label="46,XY DSD">@for (d of diagnoses.xyDsd; track d) { <option [value]="d">{{d}}</option> }</optgroup>
+                      <optgroup label="46,XX DSD">@for (d of diagnoses.xxDsd; track d) { <option [value]="d">{{d}}</option> }</optgroup>
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-6 text-emerald-500"><svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path></svg></div>
+                  </div>
+                </div>
+                <div class="mt-8 space-y-2">
+                   <label class="label-bubble">Plan & Follow-up</label>
+                   <textarea formControlName="plan" class="input-bubble h-32"></textarea>
+                </div>
+              </div>
+             </section>
+
+             <div class="flex justify-end pt-8 pb-8">
+              <button 
+                type="button" 
+                (click)="generateSummary()" 
+                class="bg-slate-900 hover:bg-black text-white px-10 py-5 rounded-[2rem] font-bold shadow-2xl shadow-slate-900/30 transition-all transform hover:scale-[1.02] active:scale-95 flex items-center gap-3 text-xl tracking-wide">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>
+                Generate Expert Summary
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    }
+
+    <!-- VIEW: GENERATING -->
+    @if (currentView() === 'generating') {
+      <div class="flex-1 flex flex-col items-center justify-center p-8 text-center bg-white/50 backdrop-blur-md">
+        <div class="relative w-32 h-32 mb-10">
+          <div class="absolute inset-0 border-4 border-slate-100 rounded-full"></div>
+          <div class="absolute inset-0 border-4 border-blue-600 rounded-full border-t-transparent animate-spin"></div>
+          <div class="absolute inset-0 flex items-center justify-center text-blue-600">
+            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4"/><path d="m16.2 7.8 2.9-2.9"/><path d="M18 12h4"/><path d="m16.2 16.2 2.9 2.9"/><path d="M12 18v4"/><path d="m4.9 19.1 2.9-2.9"/><path d="M2 12h4"/><path d="m4.9 4.9 2.9 2.9"/></svg>
+          </div>
+        </div>
+        <h2 class="text-3xl font-extrabold text-slate-800 mb-3">Synthesizing Clinical Data</h2>
+        <p class="text-slate-500 max-w-md text-lg">Applying Chicago Consensus criteria to phenotype, genotype, and hormonal profile...</p>
+      </div>
+    }
+
+    <!-- VIEW: PREVIEW -->
+    @if (currentView() === 'preview') {
+      <app-summary-preview 
+        [summaryText]="generatedSummary()" 
+        [patientData]="patientForm.value"
+        (onEdit)="editData()">
+      </app-summary-preview>
+    }
+
+    <!-- SEARCH PANEL OVERLAY -->
+    @if (showSearchPanel()) {
+      <div class="absolute inset-y-0 right-0 w-full sm:w-[500px] bg-white shadow-[0_0_50px_rgba(0,0,0,0.1)] z-40 border-l border-slate-100 flex flex-col transform transition-transform duration-300 ease-out">
+        <div class="p-6 border-b border-slate-100 flex items-center justify-between bg-white">
+          <h3 class="font-extrabold text-slate-800 flex items-center gap-3 text-lg">
+            <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></div>
+            DSD Research Assistant
+          </h3>
+          <button (click)="toggleSearch()" class="text-slate-400 hover:text-slate-600 p-2 rounded-full hover:bg-slate-50 transition-colors">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        
+        <div class="p-6 flex-1 overflow-y-auto bg-[#F8FAFC] flex flex-col gap-6">
+          <div class="bg-white p-5 rounded-[1.5rem] shadow-sm border border-slate-100">
+            <label class="block text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-3 ml-1">Search Guidelines / Genes</label>
+            <div class="relative">
+              <input 
+                type="text" 
+                [value]="searchQuery()"
+                (input)="searchQuery.set($any($event.target).value)"
+                (keyup.enter)="performSearch()"
+                placeholder="e.g. 17-OHP reference ranges neonates"
+                class="w-full pr-12 pl-4 py-3.5 rounded-2xl border-2 border-slate-100 focus:border-blue-500 focus:ring-4 focus:ring-blue-100 text-sm font-medium transition-all">
+              <button 
+                (click)="performSearch()"
+                class="absolute right-2 top-2 text-white bg-blue-600 hover:bg-blue-700 p-2 rounded-xl transition-colors shadow-lg shadow-blue-200">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 10 4 15 9 20"></polyline><path d="M20 4v7a4 4 0 0 1-4 4H4"></path></svg>
+              </button>
+            </div>
+          </div>
+
+          @if (isSearching()) {
+            <div class="flex justify-center py-10">
+               <div class="animate-spin rounded-full h-10 w-10 border-4 border-blue-100 border-t-blue-600"></div>
+            </div>
+          }
+
+          @if (searchResult(); as result) {
+            <div class="bg-white rounded-[1.5rem] shadow-sm border border-slate-100 overflow-hidden">
+              <div class="p-4 bg-gradient-to-r from-blue-50 to-white border-b border-slate-50">
+                <h4 class="font-bold text-blue-900 text-sm uppercase tracking-wide">AI Research Summary</h4>
+              </div>
+              <div class="p-6 text-sm text-slate-700 leading-relaxed prose prose-sm prose-slate">
+                {{ result.text }}
+              </div>
+              @if (result.sources.length > 0) {
+                <div class="bg-slate-50 p-5 border-t border-slate-100">
+                  <p class="text-xs font-extrabold text-slate-400 mb-3 uppercase tracking-widest">Sources</p>
+                  <ul class="space-y-2">
+                    @for (source of result.sources; track source) {
+                      <li>
+                        <a [href]="source" target="_blank" class="text-xs text-blue-600 hover:text-blue-800 truncate block flex items-center gap-2 font-medium p-2 hover:bg-blue-50 rounded-lg transition-colors">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                          {{ source }}
+                        </a>
+                      </li>
+                    }
+                  </ul>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+    }
+
+  </main>
+</div>
+
+<style>
+  .card-bubble {
+    @apply bg-white rounded-[2rem] shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-slate-100 overflow-hidden transition-all duration-300 hover:shadow-[0_20px_40px_rgba(0,0,0,0.06)];
+  }
+  .section-header {
+    @apply bg-white px-8 py-6 border-b border-slate-50 flex items-center gap-4;
+  }
+  .label-bubble {
+    @apply block text-xs font-extrabold text-slate-500 uppercase mb-2 tracking-wide ml-1;
+  }
+  .input-bubble {
+    @apply w-full rounded-2xl border-2 border-slate-200 bg-[#FDFDFD] text-sm py-3 px-4 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 placeholder-slate-300 text-slate-700 shadow-sm transition-all duration-200 outline-none font-medium hover:border-slate-300;
+  }
+  /* Explicitly fix textarea resize */
+  textarea.input-bubble {
+    @apply resize-y min-h-[56px];
+  }
+</style>
